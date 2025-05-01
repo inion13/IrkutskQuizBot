@@ -10,8 +10,8 @@ from aiogram.types import FSInputFile
 from dotenv import load_dotenv
 
 # Импортируем вопросы и факты
-from questions import questions
 from irkutskfacts import facts
+from questions import questions
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,8 +30,8 @@ stop_button = InlineKeyboardButton(text='Остановить', callback_data='s
 start_keyboard = InlineKeyboardMarkup(inline_keyboard=[[start_button]])
 confirm_quiz_button = InlineKeyboardButton(text='Начнём!', callback_data='confirm_quiz')
 cancel_quiz_button = InlineKeyboardButton(text='Назад', callback_data='cancel_quiz')
-confirm_quiz_keyboard = InlineKeyboardMarkup(inline_keyboard=[[confirm_quiz_button, cancel_quiz_button]])
 
+confirm_quiz_keyboard = InlineKeyboardMarkup(inline_keyboard=[[confirm_quiz_button, cancel_quiz_button]])
 
 # Основное меню
 main_keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -39,7 +39,7 @@ main_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [stop_button]
 ])
 
-# Хранилища состояний и балловadd
+# Хранилища состояний и баллов
 user_scores = {}  # user_id -> int
 user_states = {}  # user_id -> int (индекс вопроса)
 user_question_variants = {}  # user_id -> {question_index -> [shuffled options]}
@@ -121,17 +121,6 @@ async def start_quiz_intro(message: Message):
     )
 
 
-@router.message(Command(commands=['confirm_quiz']))
-async def start_quiz(message: Message):
-    user_id = message.from_user.id
-    user_question_order[user_id] = random.sample(range(len(questions)), 5)
-    user_states[user_id] = 0
-    user_scores[user_id] = 0
-    q_index = user_question_order[user_id][0]
-    q = questions[q_index]
-    await message.answer(q['question'], reply_markup=get_question_keyboard(user_id, q_index))
-
-
 @router.callback_query()
 async def handle_callback_query(callback_query: CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
@@ -176,7 +165,7 @@ async def handle_callback_query(callback_query: CallbackQuery):
             user_scores[user_id] += 1
             await callback_query.message.answer('✅ Верно!')
         else:
-            await callback_query.message.answer(f'❌ Неверно. Правильный ответ: {correct_option}')
+            await callback_query.message.answer(f'❌ Неверно.\n\nПравильный ответ: {correct_option}')
 
         user_states[user_id] += 1
 
