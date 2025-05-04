@@ -44,11 +44,10 @@ user_scores = {}  # user_id -> int
 user_states = {}  # user_id -> int (индекс вопроса)
 user_question_variants = {}  # user_id -> {question_index -> [shuffled options]}
 user_question_order = {}  # user_id -> [индексы вопросов]
-# Для отслеживания показанных фактов
-user_seen_facts = {}  # user_id -> set of shown fact indexes
 
 
 # Генерация клавиатуры с вариантами ответа
+
 def get_question_keyboard(user_id: int, question_index: int):
     options = questions[question_index]['options'][:]
     random.shuffle(options)
@@ -92,28 +91,8 @@ async def stop(message: Message):
 
 
 @router.message(Command(commands=['fact']))
-async def send_fact(message: Message, user_id: int = None):
-    user_id = user_id or message.from_user.id
-    total_facts = len(facts)
-
-    # Инициализируем хранилище, если пользователь новый
-    if user_id not in user_seen_facts:
-        user_seen_facts[user_id] = set()
-
-    seen = user_seen_facts[user_id]
-
-    # Все факты уже показаны — сбрасываем
-    if len(seen) == total_facts:
-        seen.clear()
-        await message.answer("🔄 Я показал все доступные мне факты!\n\nНачинаю сначала.")
-
-    # Получаем список непоказанных фактов
-    remaining_indexes = list(set(range(total_facts)) - seen)
-    fact_index = random.choice(remaining_indexes)
-    fact = facts[fact_index]
-
-    # Сохраняем как показанный
-    seen.add(fact_index)
+async def send_fact(message: Message):
+    fact = random.choice(facts)
 
     if isinstance(fact, dict):
         image_path = fact.get('image')
@@ -157,7 +136,7 @@ async def handle_callback_query(callback_query: CallbackQuery):
         await stop(callback_query.message)
 
     elif command == 'fact':
-        await send_fact(callback_query.message, user_id=user_id)
+        await send_fact(callback_query.message)
 
     elif command == 'quiz':
         await start_quiz_intro(callback_query.message)
